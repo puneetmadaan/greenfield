@@ -1,0 +1,16 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    min-height: 100vh;
+}
+
+#workspace {
+    z-index: -65535;
+    background-image: url(pattern_light.png);
+    background-size: auto;
+}
+
+canvas {
+    will-change: transform, contents, display;
+}
