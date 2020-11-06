@@ -26,7 +26,7 @@ import { nrmlvo } from './Xkb'
 
 // @ts-ignore
 export { init as initWasm } from './lib'
-export * from './ButtonEvent'
+export * from './PointerEvent'
 export * from './AxisEvent'
 export * from './KeyEvent'
 export { nrmlvo }

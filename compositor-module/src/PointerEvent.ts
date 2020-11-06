@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Greenfield.  If not, see <https://www.gnu.org/licenses/>.
 
-export interface ButtonEvent {
+export interface PointerEvent {
   x: number,
   y: number,
   timestamp: number,
   buttonCode: 0 | 1 | 2 | 3 | 4,
-  released: boolean,
+  semantics: 'buttonPress' | 'buttonRelease' | 'move',
   buttons: number,
   sceneId: string
 }
@@ -30,43 +30,43 @@ export interface CreateButtonEvent {
    y: number,
    timestamp: number,
    buttonCode: 0 | 1 | 2 | 3 | 4,
-   released: boolean,
+   semantics: 'buttonPress' | 'buttonRelease' | 'move',
    buttons: number,
-   sceneId: string): ButtonEvent
+   sceneId: string): PointerEvent
 }
 
-export interface CreateButtonEventFromMouseEvent {
+export interface CreatePointerEventFromMouseEvent {
   (mouseEvent: MouseEvent,
-   released: boolean,
+   semantics: 'buttonPress' | 'buttonRelease' | 'move',
    sceneId: string
-  ): ButtonEvent
+  ): PointerEvent
 }
 
-export const createButtonEvent: CreateButtonEvent = (
+export const createPointerEvent: CreateButtonEvent = (
   x: number,
   y: number,
   timestamp: number,
   buttonCode: 0 | 1 | 2 | 3 | 4,
-  released: boolean,
+  semantics: 'buttonPress' | 'buttonRelease' | 'move',
   buttons: number,
   sceneId: string
-): ButtonEvent => ({ x, y, timestamp, buttonCode, released, buttons, sceneId })
+): PointerEvent => ({ x, y, timestamp, buttonCode, semantics, buttons, sceneId })
 
-export const createButtonEventFromMouseEvent: CreateButtonEventFromMouseEvent = (
+export const createPointerEventFromMouseEvent: CreatePointerEventFromMouseEvent = (
   mouseEvent: MouseEvent,
-  released: boolean,
+  semantics: 'buttonPress' | 'buttonRelease' | 'move',
   sceneId: string
-): ButtonEvent => {
+): PointerEvent => {
   const currentTarget = mouseEvent.currentTarget as HTMLElement
   const { left: targetX, top: targetY } = currentTarget.getBoundingClientRect()
   const button = mouseEvent.button as 0 | 1 | 2 | 3 | 4
 
-  return createButtonEvent(
+  return createPointerEvent(
     mouseEvent.clientX - targetX,
     mouseEvent.clientY - targetY,
     mouseEvent.timeStamp,
     button,
-    released,
+    semantics,
     mouseEvent.buttons,
     sceneId
   )

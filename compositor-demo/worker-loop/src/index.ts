@@ -1,22 +1,16 @@
 import {
-  CompositorSession,
-  CompositorSurface,
   createAxisEventFromWheelEvent,
-  createButtonEventFromMouseEvent,
-  createCompositorRemoteAppLauncher,
-  createCompositorRemoteSocket,
-  createCompositorSession,
-  createCompositorWebAppLauncher,
-  createCompositorWebAppSocket,
-  createKeyEventFromKeyboardEvent,
-  initWasm
+  createPointerEventFromMouseEvent,
+  createKeyEventFromKeyboardEvent
 } from 'greenfield-compositor'
+import CompositorWorker from 'worker-loader!./CompositorWorker'
 
-let compositorPointerGrab: CompositorSurface | undefined
+const compositor: Worker = new CompositorWorker()
 
-function initializeCanvas(session: CompositorSession, canvas: HTMLCanvasElement, myId: string) {
-  // register canvas with compositor session
-  session.userShell.actions.initScene(myId, canvas)
+
+function initializeCanvas(canvas: HTMLCanvasElement, myId: string) {
+  const offscreenCanvas = canvas.transferControlToOffscreen()
+  compositor.postMessage({ type: 'initScene', data: { sceneId: myId, canvas: offscreenCanvas } }, [offscreenCanvas])
 
   // make sure the canvas has focus and receives input inputs
   canvas.onmouseover = () => canvas.focus()
@@ -25,64 +19,42 @@ function initializeCanvas(session: CompositorSession, canvas: HTMLCanvasElement,
   //wire up dom input events to compositor input events
   canvas.onpointermove = (event: PointerEvent) => {
     event.preventDefault()
-    session.userShell.actions.input.pointerMove(createButtonEventFromMouseEvent(event, false, myId))
+    const data = createPointerEventFromMouseEvent(event, 'move', myId)
+    compositor.postMessage({ type: 'PointerEvent', data })
   }
   canvas.onpointerdown = (event: PointerEvent) => {
     event.preventDefault()
-    canvas.setPointerCapture(event.pointerId)
-    session.userShell.actions.input.buttonDown(createButtonEventFromMouseEvent(event, false, myId))
+    const data = createPointerEventFromMouseEvent(event, 'buttonPress', myId)
+    compositor.postMessage({ type: 'PointerEvent', data })
   }
   canvas.onpointerup = (event: PointerEvent) => {
     event.preventDefault()
-    session.userShell.actions.input.buttonUp(createButtonEventFromMouseEvent(event, true, myId))
+    const data = createPointerEventFromMouseEvent(event, 'buttonRelease', myId)
     canvas.releasePointerCapture(event.pointerId)
+    compositor.postMessage({ type: 'PointerEvent', data })
   }
   canvas.onwheel = (event: WheelEvent) => {
     event.preventDefault()
-    session.userShell.actions.input.axis(createAxisEventFromWheelEvent(event, myId))
+    const data = createAxisEventFromWheelEvent(event, myId)
+    compositor.postMessage({ type: 'AxisEvent', data })
   }
   canvas.onkeydown = (event: KeyboardEvent) => {
-    const keyEvent = createKeyEventFromKeyboardEvent(event, true)
-    if (keyEvent) {
+    const data = createKeyEventFromKeyboardEvent(event, true)
+    if (data) {
       event.preventDefault()
-      session.userShell.actions.input.key(keyEvent)
+      compositor.postMessage({ type: 'KeyEvent', data })
     }
   }
   canvas.onkeyup = (event: KeyboardEvent) => {
-    const keyEvent = createKeyEventFromKeyboardEvent(event, false)
-    if (keyEvent) {
+    const data = createKeyEventFromKeyboardEvent(event, false)
+    if (data) {
       event.preventDefault()
-      session.userShell.actions.input.key(keyEvent)
-    }
-  }
-}
-
-function linkUserShellEvents(session: CompositorSession) {
-  const userShell = session.userShell
-
-  userShell.events.notify = (variant, message) => window.alert(message)
-  userShell.events.createUserSurface = (compositorSurface, compositorSurfaceState) => {
-    // create view on our scene for the newly created surface
-    userShell.actions.createView(compositorSurface, 'myOutputId')
-    // request the client to make this surface active
-    userShell.actions.requestActive(compositorSurface)
-  }
-  userShell.events.updateUserSeat = ({ keyboardFocus, pointerGrab }) => {
-    // raise the surface when a user clicks on it
-    if (pointerGrab !== compositorPointerGrab && pointerGrab) {
-      userShell.actions.raise(pointerGrab, 'myOutputId')
-      userShell.actions.setKeyboardFocus(pointerGrab)
+      compositor.postMessage({ type: 'KeyEvent', data })
     }
   }
 }
 
 async function main() {
-  // load web assembly libraries
-  await initWasm()
-
-  // create new compositor context
-  const session = createCompositorSession()
-
   // Get an HTML5 canvas for use as an output for the compositor. Multiple outputs can be used.
   const canvas: HTMLCanvasElement = document.createElement('canvas')
   canvas.width = 1024
@@ -91,15 +63,7 @@ async function main() {
   canvas.style.height = `${canvas.height}`
 
   // hook up the canvas to our compositor
-  initializeCanvas(session, canvas, 'myOutputId')
-  linkUserShellEvents(session)
-
-  // create application launchers for web & remote applications
-  const webAppSocket = createCompositorWebAppSocket(session)
-  const webAppLauncher = createCompositorWebAppLauncher(webAppSocket)
-
-  const remoteSocket = createCompositorRemoteSocket(session)
-  const remoteAppLauncher = createCompositorRemoteAppLauncher(session, remoteSocket)
+  initializeCanvas(canvas, 'myOutputId')
 
   // Add some HTML buttons so the user can launch applications.
   const webShmAppURLButton: HTMLButtonElement = document.createElement('button')
@@ -133,14 +97,11 @@ async function main() {
     const urlString = urlInput.value
     const url = new URL(urlString)
     if (url.protocol.startsWith('ws')) {
-      remoteAppLauncher.launchURL(url)
+      compositor.postMessage({ type: 'launchRemote', data: url })
     } else if (url.protocol.startsWith('http')) {
-      webAppLauncher.launch(url)
+      compositor.postMessage({ type: 'launchWeb', data: url })
     }
   }
-
-  // make compositor global protocol objects available to client
-  session.globals.register()
 
   // show the html elements on the user's screen
   document.body.appendChild(canvas)

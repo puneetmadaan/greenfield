@@ -19,9 +19,9 @@ import {
   Client,
   Global,
   Registry,
+  WlOutputMode,
   WlOutputRequests,
   WlOutputResource,
-  WlOutputMode,
   WlOutputSubpixel,
   WlOutputTransform
 } from 'westfield-runtime-server'
@@ -111,30 +111,30 @@ export default class Output implements WlOutputRequests {
     const physicalHeight = Math.ceil(this.canvas.height * 0.2646)
     const subpixel = WlOutputSubpixel.unknown
     const make = 'Greenfield'
-    const model = window.navigator.userAgent
+    const model = navigator.userAgent
 
-    const orientation = window.screen.orientation.type
+    // const orientation = screen.orientation.type
     let transform = WlOutputTransform.normal
 
     // FIXME this requires some experimentation to get it right
-    switch (orientation) {
-      case 'portrait-primary': {
-        transform = WlOutputTransform.normal
-        break
-      }
-      case 'portrait-secondary': {
-        transform = WlOutputTransform._180
-        break
-      }
-      case 'landscape-primary': {
-        transform = WlOutputTransform.normal
-        break
-      }
-      case 'landscape-secondary': {
-        transform = WlOutputTransform._180
-        break
-      }
-    }
+    // switch (orientation) {
+    //   case 'portrait-primary': {
+    //     transform = WlOutputTransform.normal
+    //     break
+    //   }
+    //   case 'portrait-secondary': {
+    //     transform = WlOutputTransform._180
+    //     break
+    //   }
+    //   case 'landscape-primary': {
+    //     transform = WlOutputTransform.normal
+    //     break
+    //   }
+    //   case 'landscape-secondary': {
+    //     transform = WlOutputTransform._180
+    //     break
+    //   }
+    // }
 
     wlOutputResource.geometry(x, y, physicalWidth, physicalHeight, subpixel, make, model, transform)
   }

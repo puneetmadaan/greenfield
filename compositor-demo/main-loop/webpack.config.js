@@ -29,6 +29,9 @@ module.exports = {
   devServer: {
     contentBase: './dist'
   },
+  resolve: {
+    extensions: [ '.ts', '.js' ],
+  },
   module: {
     rules: [
       // Handle TypeScript

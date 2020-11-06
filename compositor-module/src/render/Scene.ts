@@ -34,7 +34,7 @@ function createRenderFrame(): Promise<void> {
 
 class Scene {
   readonly session: Session
-  readonly canvas: HTMLCanvasElement
+  readonly canvas: HTMLCanvasElement | OffscreenCanvas
   resolution: Size | 'auto'
   readonly gl: WebGLRenderingContext
   readonly sceneShader: SceneShader
@@ -48,13 +48,13 @@ class Scene {
   private _destroyResolve: (value?: void | PromiseLike<void>) => void
   private readonly _destroyPromise: Promise<void>
 
-  static create(session: Session, gl: WebGLRenderingContext, canvas: HTMLCanvasElement, output: Output, sceneId: string): Scene {
+  static create(session: Session, gl: WebGLRenderingContext, canvas: HTMLCanvasElement|OffscreenCanvas, output: Output, sceneId: string): Scene {
     const sceneShader = SceneShader.create(gl)
     const yuvaToRgba = YUVAToRGBA.create(gl)
     return new Scene(session, canvas, gl, sceneShader, yuvaToRgba, output, sceneId)
   }
 
-  private constructor(session: Session, canvas: HTMLCanvasElement, gl: WebGLRenderingContext, sceneShader: SceneShader, yuvaToRgba: YUVAToRGBA, output: Output, sceneId: string) {
+  private constructor(session: Session, canvas: HTMLCanvasElement|OffscreenCanvas, gl: WebGLRenderingContext, sceneShader: SceneShader, yuvaToRgba: YUVAToRGBA, output: Output, sceneId: string) {
     this.session = session
     this.canvas = canvas
     this.resolution = 'auto'
@@ -71,9 +71,11 @@ class Scene {
 
   private _ensureResolution() {
     if (this.resolution === 'auto') {
-      if (this.canvas.width !== this.canvas.clientWidth || this.canvas.height !== this.canvas.clientHeight) {
-        this.canvas.width = this.canvas.clientWidth
-        this.canvas.height = this.canvas.clientHeight
+      if (this.canvas instanceof HTMLCanvasElement) {
+        if (this.canvas.width !== this.canvas.clientWidth || this.canvas.height !== this.canvas.clientHeight) {
+          this.canvas.width = this.canvas.clientWidth
+          this.canvas.height = this.canvas.clientHeight
+        }
       }
     } else if (this.canvas.width !== this.resolution.w || this.canvas.height !== this.resolution.h) {
       this.canvas.width = this.resolution.w

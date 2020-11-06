@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "greenfield-compositor": "0.0.3",
+    "greenfield-compositor": "link:../../compositor-module",
     "source-map-loader": "^1.0.2"
   },
   "devDependencies": {

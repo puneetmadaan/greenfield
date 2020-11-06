@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Greenfield.  If not, see <https://www.gnu.org/licenses/>.
 
-import Session from '../Session'
 import Output from '../Output'
+import Session from '../Session'
 import Scene from './Scene'
 
 export default class Renderer {
-  scenes: { [key: string]: Scene };
-  session: Session;
+  scenes: { [key: string]: Scene }
+  session: Session
 
   static create(session: Session): Renderer {
     return new Renderer(session)
@@ -32,7 +32,7 @@ export default class Renderer {
     this.session = session
   }
 
-  initScene(sceneId: string, canvas: HTMLCanvasElement): Promise<void> {
+  initScene(sceneId: string, canvas: HTMLCanvasElement | OffscreenCanvas): Promise<void> {
     let scene = this.scenes[sceneId] || null
     if (!scene) {
       const gl = canvas.getContext('webgl', {
@@ -49,7 +49,7 @@ export default class Renderer {
       // TODO notify client on which output their surfaces are being displayed
       const output = Output.create(canvas)
       scene = Scene.create(this.session, gl, canvas, output, sceneId)
-      this.scenes = {...this.scenes, [sceneId]: scene}
+      this.scenes = { ...this.scenes, [sceneId]: scene }
       this.session.globals.registerOutput(output)
       scene.onDestroy().then(() => {
         delete this.scenes[sceneId]

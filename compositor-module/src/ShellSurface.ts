@@ -92,8 +92,8 @@ export default class ShellSurface implements WlShellSurfaceRequests, UserShellSu
     shellSurface._doPing(wlShellSurfaceResource)
 
     wlShellSurfaceResource.onDestroy().then(() => {
-      window.clearTimeout(shellSurface._timeoutTimer)
-      window.clearTimeout(shellSurface._pingTimer)
+      clearTimeout(shellSurface._timeoutTimer)
+      clearTimeout(shellSurface._pingTimer)
     })
 
     return shellSurface
@@ -148,12 +148,12 @@ export default class ShellSurface implements WlShellSurfaceRequests, UserShellSu
       this.session.userShell.events.updateUserSurface?.(this.userSurface, this._userSurfaceState)
       this._pingTimeoutActive = false
     }
-    window.clearTimeout(this._timeoutTimer)
-    this._pingTimer = window.setTimeout(() => this._doPing(resource), 5000)
+    clearTimeout(this._timeoutTimer)
+    this._pingTimer = self.setTimeout(() => this._doPing(resource), 5000)
   }
 
   _doPing(resource: WlShellSurfaceResource) {
-    this._timeoutTimer = window.setTimeout(() => {
+    this._timeoutTimer = self.setTimeout(() => {
       if (!this._pingTimeoutActive) {
         // ping timed out, make view gray
         this._pingTimeoutActive = true
@@ -347,7 +347,8 @@ export default class ShellSurface implements WlShellSurfaceRequests, UserShellSu
     const surface = this.wlSurfaceResource.implementation as Surface
     // TODO get proper size in surface coordinates instead of assume surface space === global space
     surface.surfaceChildSelf.position = Point.create(0, 0)
-    this.resource.configure(none, window.innerWidth, window.innerHeight)
+    // FIXME not accessible in worker
+    this.resource.configure(none, self.innerWidth, self.innerHeight)
   }
 
   async setPopup(resource: WlShellSurfaceResource, wlSeatResource: WlSeatResource, serial: number, parent: WlSurfaceResource, x: number, y: number, flags: number) {

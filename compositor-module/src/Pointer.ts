@@ -17,16 +17,16 @@
 
 import { Fixed } from 'westfield-runtime-common'
 import {
-  WlPointerRequests,
-  WlPointerResource,
   WlPointerAxis,
   WlPointerAxisSource,
   WlPointerButtonState,
   WlPointerError,
+  WlPointerRequests,
+  WlPointerResource,
   WlSurfaceResource
 } from 'westfield-runtime-server'
 import { AxisEvent } from './AxisEvent'
-import { ButtonEvent } from './ButtonEvent'
+import { PointerEvent } from './PointerEvent'
 import DataDevice from './DataDevice'
 
 import Point from './math/Point'
@@ -91,10 +91,10 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
   private _cursorSurface?: WlSurfaceResource
   private readonly _cursorDestroyListener: () => void
   private _mouseMoveListeners: (() => void)[] = []
-  private _buttonPressResolve?: (value?: ButtonEvent | PromiseLike<ButtonEvent>) => void
-  private _buttonPressPromise?: Promise<ButtonEvent>
-  private _buttonReleaseResolve?: (value?: ButtonEvent | PromiseLike<ButtonEvent>) => void
-  private _buttonReleasePromise?: Promise<ButtonEvent>
+  private _buttonPressResolve?: (value?: PointerEvent | PromiseLike<PointerEvent>) => void
+  private _buttonPressPromise?: Promise<PointerEvent>
+  private _buttonReleaseResolve?: (value?: PointerEvent | PromiseLike<PointerEvent>) => void
+  private _buttonReleasePromise?: Promise<PointerEvent>
 
   static create(session: Session, dataDevice: DataDevice): Pointer {
     return new Pointer(session, dataDevice)
@@ -132,7 +132,7 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
 
   onButtonPress() {
     if (this._buttonPressPromise === undefined) {
-      this._buttonPressPromise = new Promise<ButtonEvent>(resolve => {
+      this._buttonPressPromise = new Promise<PointerEvent>(resolve => {
         this._buttonPressResolve = resolve
       })
       this._buttonPressPromise.then(() => {
@@ -242,7 +242,11 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
     this._cursorSurface = surfaceResource
 
     if (this.scene) {
-      this.scene.canvas.style.cursor = 'none'
+      if (this.scene.canvas instanceof HTMLCanvasElement) {
+        this.scene.canvas.style.cursor = 'none'
+      } else {
+        // TODO send out user shell event to set cursor to 'none'
+      }
 
       if (surfaceResource) {
         const surface = surfaceResource.implementation as Surface
@@ -276,11 +280,11 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
     }
   }
 
-  private _focusFromEvent(event: ButtonEvent): View | undefined {
+  private _focusFromEvent(event: PointerEvent): View | undefined {
     return this.session.renderer.scenes[event.sceneId].pickView(Point.create(event.x, event.y))
   }
 
-  handleMouseMove(event: ButtonEvent) {
+  handleMouseMove(event: PointerEvent) {
     this.x = event.x
     this.y = event.y
     this.scene = this.session.renderer.scenes[event.sceneId]
@@ -337,7 +341,7 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
     })
   }
 
-  handleMouseUp(event: ButtonEvent) {
+  handleMouseUp(event: PointerEvent) {
     if (this._dataDevice.dndSourceClient) {
       this._dataDevice.onMouseUp()
       return
@@ -373,7 +377,7 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
     }
   }
 
-  handleMouseDown(event: ButtonEvent) {
+  handleMouseDown(event: PointerEvent) {
     this.handleMouseMove(event)
 
     if (this.focus && this.focus.surface) {
@@ -447,7 +451,11 @@ export default class Pointer implements WlPointerRequests, SurfaceRole<void> {
 
   setDefaultCursor() {
     if (this.scene) {
-      this.scene.canvas.style.cursor = 'auto'
+      if (this.scene.canvas instanceof HTMLCanvasElement) {
+        this.scene.canvas.style.cursor = 'auto'
+      } else {
+        // FIXME send out user shell event to change the cursor to 'auto'
+      }
       if (this.scene.pointerView) {
         this.scene.pointerView.destroy()
         this.scene.pointerView = undefined

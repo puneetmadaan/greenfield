@@ -18,7 +18,7 @@
 import { Display, WlSurfaceResource } from 'westfield-runtime-server'
 import {
   AxisEvent,
-  ButtonEvent,
+  PointerEvent,
   CompositorClient,
   CompositorConfiguration,
   CompositorSeatState,
@@ -42,11 +42,7 @@ export interface UserShellApiEvents {
 }
 
 export interface UserShellApiInputActions {
-  pointerMove(buttonEvent: ButtonEvent): void
-
-  buttonUp(buttonEvent: ButtonEvent): void
-
-  buttonDown(buttonEvent: ButtonEvent): void
+  pointer(pointerEvent: PointerEvent): void
 
   axis(axisEvent: AxisEvent): void
 
@@ -62,7 +58,7 @@ export interface UserShellApiActions {
 
   notifyInactive(compositorSurface: CompositorSurface): void
 
-  initScene(sceneId: string, canvas: HTMLCanvasElement): void
+  initScene(sceneId: string, canvas: HTMLCanvasElement | OffscreenCanvas): void
 
   refreshScene(sceneId: string): Promise<void>
 
@@ -102,16 +98,22 @@ export function createUserShellApi(session: Session): UserShellApi {
     events: {},
     actions: {
       input: {
-        pointerMove: (buttonEvent) => {
+        pointer: (buttonEvent) => {
+          switch (buttonEvent.semantics){
+            case 'buttonPress':{
+              session.globals.seat.pointer.handleMouseDown(buttonEvent)
+              break
+            }
+            case 'buttonRelease': {
+              session.globals.seat.pointer.handleMouseUp(buttonEvent)
+              break
+            }
+            case 'move': {
+              session.globals.seat.pointer.handleMouseMove(buttonEvent)
+              break
+            }
+          }
           session.globals.seat.pointer.handleMouseMove(buttonEvent)
-          session.flush()
-        },
-        buttonUp: (buttonEvent) => {
-          session.globals.seat.pointer.handleMouseUp(buttonEvent)
-          session.flush()
-        },
-        buttonDown: (buttonEvent) => {
-          session.globals.seat.pointer.handleMouseDown(buttonEvent)
           session.flush()
         },
         axis: (axisEvent) => {

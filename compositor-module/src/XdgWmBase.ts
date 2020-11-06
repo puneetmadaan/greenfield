@@ -84,8 +84,8 @@ export default class XdgWmBase implements XdgWmBaseRequests {
       client.onClose().then(() => {
         const pingState = this._clientPingStates.get(client)
         if (pingState) {
-          window.clearTimeout(pingState.timeoutTimer)
-          window.clearTimeout(pingState.pingTimer)
+          clearTimeout(pingState.timeoutTimer)
+          clearTimeout(pingState.pingTimer)
           this._clientPingStates.delete(client)
         }
       })

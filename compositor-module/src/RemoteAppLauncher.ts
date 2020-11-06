@@ -42,7 +42,7 @@ export default class RemoteAppLauncher implements CompositorRemoteAppLauncher {
   async launchURL(appEndpointURL: URL): Promise<Client> {
     appEndpointURL.searchParams.delete('compositorSessionId')
     appEndpointURL.searchParams.append('compositorSessionId', this._session.compositorSessionId)
-    const webSocket = new window.WebSocket(appEndpointURL.href)
+    const webSocket = new WebSocket(appEndpointURL.href)
     return this._remoteSocket.onWebSocket(webSocket)
   }
 }

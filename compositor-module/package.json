@@ -25,7 +25,7 @@
   "scripts": {
     "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist types",
-    "build": "tsc && cpy './src/assets/**' './dist/assets/' && typedoc --includeDeclarations --excludeExternals --excludeNotExported --excludePrivate --ignoreCompilerErrors --out docs --target es6 --theme minimal --mode modules --inputFiles src/index.ts --inputFiles src/ButtonEvent.ts --inputFiles src/AxisEvent.ts --inputFiles src/KeyEvent.ts --inputFiles src/lib/index.ts",
+    "build": "tsc && cpy './src/assets/**' './dist/assets/' && typedoc --includeDeclarations --excludeExternals --excludeNotExported --excludePrivate --ignoreCompilerErrors --out docs --target es6 --theme minimal --mode modules --inputFiles src/index.ts --inputFiles src/PointerEvent.ts --inputFiles src/AxisEvent.ts --inputFiles src/KeyEvent.ts --inputFiles src/lib/index.ts",
     "test": "jest --coverage",
     "test:watch": "jest --coverage --watch",
     "test:prod": "yarn lint && yarn test -- --no-cache",
