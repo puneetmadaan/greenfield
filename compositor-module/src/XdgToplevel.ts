@@ -133,6 +133,10 @@ export default class XdgToplevel implements XdgToplevelRequests, UserShellSurfac
     this.xdgSurface = xdgSurface
   }
 
+  prepareViewRenderState(view: View): void {
+    view.scene.prepareViewRenderState(view)
+  }
+
   requestActive() {
     if (this._userSurfaceState.active) {
       return
